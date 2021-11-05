@@ -108,7 +108,7 @@
                 "&aid=" +               document.getElementsByTagName("input")[7].value +
                 "&cpu_arch=" +          document.getElementsByTagName("input")[8].value
 
-            console.log(url)
+            // console.log(url)
 
             var httpRequest = new XMLHttpRequest();
             httpRequest.open('GET', url, true);
@@ -116,10 +116,15 @@
 
             httpRequest.onreadystatechange = function () {
                 if (httpRequest.readyState == 4 && httpRequest.status == 200) {
-                    var json = httpRequest.responseText;
-                    console.log(json);
-                } else {
-                    console.log("fail")
+                    var msg = httpRequest.responseText;
+                    var info = JSON.parse(msg)
+                    // console.log(info);
+
+                    document.getElementsByTagName("input")[9].value = info.Download_url
+                    document.getElementsByTagName("input")[10].value = info.Update_version_code
+                    document.getElementsByTagName("input")[11].value = info.Md5
+                    document.getElementsByTagName("input")[12].value = info.Title
+                    document.getElementsByTagName("input")[13].value = info.Update_tips
                 }
             };
             // versionForm.method = "POST";
