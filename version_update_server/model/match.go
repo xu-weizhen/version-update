@@ -27,6 +27,7 @@ type NewVersion struct {
 }
 
 func GetVersion(c *gin.Context) (*Version, error) {
+	// 从消息中提取提交的版本信息
 
 	v := Version{
 		c.Query("version"),
@@ -40,18 +41,21 @@ func GetVersion(c *gin.Context) (*Version, error) {
 		-1, // Cpu_arch
 	}
 
+	// os_api 字段由 string 类型转为 int 类型
 	os, err := strconv.Atoi(c.Query("os_api"))
 	if err != nil {
 		return &v, err
 	}
 	v.Os_api = os
 
+	// aid 字段由 string 类型转为 int 类型
 	aid, err := strconv.Atoi(c.Query("aid"))
 	if err != nil {
 		return &v, err
 	}
 	v.Aid = aid
 
+	// cpu_arch 字段由 string 类型转为 int 类型
 	cpu, err := strconv.Atoi(c.Query("cpu_arch"))
 	if err != nil {
 		return &v, err
@@ -62,8 +66,10 @@ func GetVersion(c *gin.Context) (*Version, error) {
 }
 
 func MatchRule(v *Version) *NewVersion {
-	// todo
+	// 根据当前版本匹配新版本信息
+	// TODO
 
+	// 虚假的新版本信息
 	newVersion := NewVersion{
 		"https://download.com",
 		"1.2.3.4",
