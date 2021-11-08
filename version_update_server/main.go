@@ -67,9 +67,21 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"msg": "success"})
 	})
 
-	// router.GET("/download", func(c *gin.Context) {
-	// 	c.Redirect(http.StatusMovedPermanently, "http://www.google.com/")
-	// })
+	router.GET("/download", func(c *gin.Context) {
+		db, err := model.ConnectDatabase()
+		if err != nil { // 数据库连接失败
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "database error"})
+			return
+		}
+		defer db.Close()
+
+		err = model.DownloadCount(c, db)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "invalid parameter"})
+		} else {
+			c.Redirect(http.StatusMovedPermanently, c.Query("url"))
+		}
+	})
 
 	router.Run(":8081")
 }

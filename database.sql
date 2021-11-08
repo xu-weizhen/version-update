@@ -32,7 +32,14 @@ CREATE TABLE rulesForiOS(
 	PRIMARY KEY(`aid`,`platform`,`update_version_code` )
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
+-- 统计下载次数
+CREATE TABLE downloadCount(
+	`aid` INT,
+	`platform` VARCHAR(20),
+	`update_version_code` varchar(40),
+	`count` BIGINT,
+	PRIMARY KEY(`aid`,`platform`,`update_version_code` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 
