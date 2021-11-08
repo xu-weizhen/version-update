@@ -1,6 +1,8 @@
 package model
 
 import (
+	"database/sql"
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -65,18 +67,34 @@ func GetVersion(c *gin.Context) (*Version, error) {
 	return &v, nil
 }
 
-func MatchRule(v *Version) *NewVersion {
+func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 	// 根据当前版本匹配新版本信息
 	// TODO
 
-	// 虚假的新版本信息
-	newVersion := NewVersion{
-		"https://download.com",
-		"1.2.3.4",
-		"asdfghj",
-		"新版本",
-		"这是一个新版本测试信息",
-	}
+	var res NewVersion
+	// defaultVersion := NewVersion{ // 未命中
+	// 	"https://download.com",
+	// 	"1.2.3.4",
+	// 	"asdfghj",
+	// 	"新版本",
+	// 	"这是一个新版本测试信息",
+	// }
 
-	return &newVersion
+	if v.Device_platform == "iOS" {
+		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforios WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? order by update_version_code DESC limit 0,1"
+		err := db.QueryRow(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code).Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
+		if err != nil {
+			fmt.Printf("scan failed, err:%v\n", err)
+			return nil, err
+		}
+		return &res, err
+	} else {
+		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforandroid WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? AND max_os_api>=? AND min_os_api<=? order by update_version_code DESC limit 0,1"
+		err := db.QueryRow(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code, v.Os_api, v.Os_api).Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
+		if err != nil {
+			fmt.Printf("scan failed, err:%v\n", err)
+			return nil, err
+		}
+		return &res, err
+	}
 }

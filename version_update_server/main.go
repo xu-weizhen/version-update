@@ -24,8 +24,20 @@ func main() {
 			return
 		}
 
-		newVersion := model.MatchRule(version) // 获取可更新新版本
-		c.JSON(http.StatusOK, newVersion)      // 将可更新新版本写入返回的消息
+		db, err := model.ConnectDatabase()
+		if err != nil { // 数据库连接失败
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "database error"})
+			return
+		}
+		defer db.Close()
+
+		newVersion, err := model.MatchRule(version, db) // 获取可更新新版本
+		if err != nil {                                 // 数据库查询失败
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "invalid parameter"})
+			return
+		}
+
+		c.JSON(http.StatusOK, newVersion) // 将可更新新版本写入返回的消息
 	})
 
 	router.POST("/config", func(c *gin.Context) {
@@ -54,6 +66,10 @@ func main() {
 
 		c.JSON(http.StatusOK, gin.H{"msg": "success"})
 	})
+
+	// router.GET("/download", func(c *gin.Context) {
+	// 	c.Redirect(http.StatusMovedPermanently, "http://www.google.com/")
+	// })
 
 	router.Run(":8081")
 }
