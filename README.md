@@ -16,10 +16,19 @@
 使用Get方式请求该服务器，Get参数见*营员手册*，返回可升级的版本信息，返回值见*营员手册*。
 
 
-## 连通测试
+## 获取可升级版本
 1. 启动版本更新接口服务器： `./version_update_server/main.exe`
 2. 启动首页服务器： `./home_page_server/main.exe`
 3. 浏览器访问： `http://127.0.0.1:8080`
 4. 填写左侧*当前版本*当前版本信息，点击提交
 5. 可在右侧*可升级版本*查看可升级版本信息
-![首页](./img/homepage.png)
+![获取可升级版本](./img/homepage.png)
+
+
+## 添加规则
+1. 启动版本更新接口服务器： `./version_update_server/main.exe`
+2. 启动首页服务器： `./home_page_server/main.exe`
+3. 浏览器访问： `http://127.0.0.1:8080/config`
+4. 填写*新规则*信息，点击提交
+5. 查看添加结果
+![添加规则](./img/configpage.png)

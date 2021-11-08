@@ -22,7 +22,7 @@
 					<div class="card fat">
 						<div class="card-body">
 							<h4 class="card-title">Configure</h4>
-							<form method="POST" class="my-login-validation" novalidate="">
+							<form class="my-login-validation" novalidate="">
 								
 								<div class="form-group">
 									<label for="email">aid</label>
@@ -30,7 +30,7 @@
 								</div>
 								<div class="form-group">
 									<label for="email">platform</label>
-									<input type="text" class="form-control" name="platform" onchange="fun()" required autofocus>
+									<input type="text" class="form-control" name="platform" required autofocus>
 								</div>
 								<div class="form-group">
 									<label for="email">device_id_list</label>
@@ -81,13 +81,13 @@
 									<input type="text" class="form-control" name="update_tips" required autofocus>
 								</div>
 
-								<div class="form-group m-0">
-									<button type="submit" class="btn btn-primary btn-block" onclick="check()">
-										Login
-									</button>
-								</div>
-								
 							</form>
+
+							<div class="form-group m-0">
+								<button class="btn btn-primary btn-block" onclick="submit()">
+									提交
+								</button>
+							</div>
 						</div>
 					</div>
 					<div class="footer">
@@ -100,38 +100,53 @@
 </body>
 
 <script type="text/javascript">
-	function fun(){
-		var platform = document.getElementsByName("platform")[0].value;
-		if(platform=="iOS"){
-			//$('#max').attr("disabled","disabled");
+	// function fun(){
+	// 	var platform = document.getElementsByName("platform")[0].value;
+	// 	if(platform=="iOS"){
+	// 		//$('#max').attr("disabled","disabled");
+	// 	}
+	// 	else{
+	// 		//$('#max').attr("disabled",false);
+	// 	}
+	// }
+	 // 事件处理函数，当下拉列表选择改变时，触发该事件
+	function submit()
+	{
+		// check 
+		for(var i = 0; i < 14; i++) {
+			if(document.getElementsByTagName("input")[i].value === ""){
+				alert("信息填写不完全");
+				return 
+			}
 		}
-		else{
-			//$('#max').attr("disabled",false);
-		}
-	}
 
-	function check(){
-		var aid = document.getElementsByName("aid")[0].value;
-		var platform = document.getElementsByName("platform")[0].value;
-		var download_url = document.getElementsByName("download_url")[0].value;
-		var max_update_version_code = document.getElementsByName("max_update_version_code")[0].value;
-		var min_update_version_code = document.getElementsByName("min_update_version_code")[0].value;
-		var max_os_api = document.getElementsByName("max_os_api")[0].value;
-		var min_os_api = document.getElementsByName("min_os_api")[0].value;
-		var cpu_arch = document.getElementsByName("cpu_arch")[0].value;
-		var channel = document.getElementsByName("channel")[0].value;
-		var download_url = document.getElementsByName("download_url")[0].value;
-		var update_version_code = document.getElementsByName("update_version_code")[0].value;
-		var md5 = document.getElementsByName("md5")[0].value;
-		var title = document.getElementsByName("title")[0].value;
-		var update_tips = document.getElementsByName("update_tips")[0].value;
+		url = "http://127.0.0.1:8081/config?" +
+                "aid=" +            		document.getElementsByTagName("input")[0].value + 
+                "&platform=" +   			document.getElementsByTagName("input")[1].value + 
+                "&device_id_list=" + 		document.getElementsByTagName("input")[2].value +
+                "&max_update_version_code=" +		document.getElementsByTagName("input")[3].value +
+                "&min_update_version_code=" +		document.getElementsByTagName("input")[4].value +
+                "&max_os_api=" +      		document.getElementsByTagName("input")[5].value +
+                "&min_os_api=" + 			document.getElementsByTagName("input")[6].value +
+                "&cpu_arch=" +				document.getElementsByTagName("input")[7].value +
+                "&channel=" +          		document.getElementsByTagName("input")[8].value +
+				"&download_url=" +			document.getElementsByTagName("input")[9].value +
+                "&update_version_code=" +	document.getElementsByTagName("input")[10].value +
+				"&md5=" +              		document.getElementsByTagName("input")[11].value +
+                "&title=" +          		document.getElementsByTagName("input")[12].value +
+				"&update_tips=" + 			document.getElementsByTagName("input")[13].value
+		
+		var httpRequest = new XMLHttpRequest();
+		httpRequest.open("POST", url); 
+		httpRequest.send();
 
-		if(aid==""||platform==""||max_update_version_code==""||min_update_version_code==""||cpu_arch==""||channel==""||download_url==""||update_version_code==""||md5==""||title==""||update_tips==""){
-			alert("信息填写不完全");
-		}
-		else{
-			alert("配置成功");
-		}
+		httpRequest.onreadystatechange = function () {
+			if (httpRequest.readyState == 4) {
+				var msg = httpRequest.responseText;
+				var info = JSON.parse(msg)
+				alert(info.msg)
+			}
+		};
 	}
 </script>
 

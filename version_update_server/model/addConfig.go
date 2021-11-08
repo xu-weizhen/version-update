@@ -32,41 +32,41 @@ func GetPostRule(c *gin.Context) (*Rule, error) {
 	// 添加规则
 
 	user := SendToUser{
-		c.PostForm("download_url"),
-		c.PostForm("update_version_code"),
-		c.PostForm("md5"),
-		c.PostForm("title"),
-		c.PostForm("update_tips"),
+		c.Query("download_url"),
+		c.Query("update_version_code"),
+		c.Query("md5"),
+		c.Query("title"),
+		c.Query("update_tips"),
 	}
 
 	rule := Rule{
 		-1, // aid
-		c.PostForm("platform"),
-		c.PostForm("max_update_version_code"),
-		c.PostForm("min_update_version_code"),
+		c.Query("platform"),
+		c.Query("max_update_version_code"),
+		c.Query("min_update_version_code"),
 		-1, // max os api
 		-1, // min os api
-		c.PostForm("cpu_arch"),
-		c.PostForm("channel"),
+		c.Query("cpu_arch"),
+		c.Query("channel"),
 		&user,
 	}
 
 	// aid 字段由 string 类型转为 int 类型
-	aid, err := strconv.Atoi(c.PostForm("aid"))
+	aid, err := strconv.Atoi(c.Query("aid"))
 	if err != nil {
 		return &rule, err
 	}
 	rule.Aid = aid
 
 	// max_os_api 字段由 string 类型转为 int 类型
-	max_os_api, err := strconv.Atoi(c.PostForm("max_os_api"))
+	max_os_api, err := strconv.Atoi(c.Query("max_os_api"))
 	if err != nil {
 		return &rule, err
 	}
 	rule.Max_os_api = max_os_api
 
 	// min_os_api 字段由 string 类型转为 int 类型
-	min_os_api, err := strconv.Atoi(c.PostForm("min_os_api"))
+	min_os_api, err := strconv.Atoi(c.Query("min_os_api"))
 	if err != nil {
 		return &rule, err
 	}
