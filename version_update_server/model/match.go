@@ -69,7 +69,7 @@ func GetVersion(c *gin.Context) (*Version, error) {
 
 func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 	// 根据当前版本匹配新版本信息
-	// TODO
+	// TODO: 白名单校验
 
 	var res NewVersion
 	// defaultVersion := NewVersion{ // 未命中
@@ -80,8 +80,7 @@ func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 	// 	"这是一个新版本测试信息",
 	// }
 
-	// 改写版本编码
-	v.Update_version_code = EncodeVersion(v.Update_version_code)
+	v.Update_version_code = EncodeVersion(v.Update_version_code) // 改写版本编码
 
 	if v.Device_platform == "iOS" {
 		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforios WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? order by update_version_code DESC limit 0,1"
