@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"errors"
 	"strconv"
 	"strings"
 
@@ -118,6 +117,13 @@ func GetPostRule(c *gin.Context) (*Rule, error) {
 	return &rule, nil
 }
 
+// 还原版本编码
+func recoverVersion(r *Rule) {
+	r.Max_update_version_code = DecodeVersion(r.Max_update_version_code)
+	r.Min_update_version_code = DecodeVersion(r.Min_update_version_code)
+	r.ToUser.Update_version_code = DecodeVersion(r.ToUser.Update_version_code)
+}
+
 func AddRuleToDatabase(db *sql.DB, r *Rule) error {
 	// 将新规则写入数据库
 
@@ -126,33 +132,60 @@ func AddRuleToDatabase(db *sql.DB, r *Rule) error {
 	r.Min_update_version_code = EncodeVersion(r.Min_update_version_code)
 	r.ToUser.Update_version_code = EncodeVersion(r.ToUser.Update_version_code)
 
-	err := errors.New("platform is wrong")
+	defer recoverVersion(r) // 还原版本编码
 
 	// 写数据库
+	tx, err := db.Begin()
+
+	if err != nil {
+		if tx != nil {
+			tx.Rollback() // 回滚
+		}
+		return err
+	}
+
 	if r.Platform == "iOS" {
-		stmt, _ := db.Prepare(`INSERT INTO rulesForiOS(aid, platform,update_version_code,max_update_version_code,
+		sentence := `INSERT INTO rulesForiOS(aid, platform,update_version_code,max_update_version_code,
 			min_update_version_code,cpu_arch,channel,download_url,md5,title,update_tips) 
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-		defer stmt.Close()
-		_, err = stmt.Exec(r.Aid, r.Platform, r.ToUser.Update_version_code, r.Max_update_version_code, r.Min_update_version_code,
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		// stmt, _ := db.Prepare(sentence)
+		// defer stmt.Close()
+		// _, err = stmt.Exec(r.Aid, r.Platform, r.ToUser.Update_version_code, r.Max_update_version_code, r.Min_update_version_code,
+		// 	r.Cpu_arch, r.Channel, r.ToUser.Download_url, r.ToUser.Md5, r.ToUser.Title, r.ToUser.Update_tips)
+		_, err = tx.Exec(sentence, r.Aid, r.Platform, r.ToUser.Update_version_code, r.Max_update_version_code, r.Min_update_version_code,
 			r.Cpu_arch, r.Channel, r.ToUser.Download_url, r.ToUser.Md5, r.ToUser.Title, r.ToUser.Update_tips)
+
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
 	if r.Platform == "Android" {
-		stmt, _ := db.Prepare(`INSERT INTO rulesForiOS(aid, platform,update_version_code,max_update_version_code,
+		sentence := `INSERT INTO rulesForiOS(aid, platform,update_version_code,max_update_version_code,
 			min_update_version_code,cpu_arch,channel,download_url,md5,title,update_tips,max_os_api,min_os_api ) 
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-		defer stmt.Close()
-		_, err = stmt.Exec(r.Aid, r.Platform, r.ToUser.Update_version_code, r.Max_update_version_code, r.Min_update_version_code,
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		// stmt, _ := db.Prepare(sentence)
+		// defer stmt.Close()
+		// _, err = stmt.Exec(r.Aid, r.Platform, r.ToUser.Update_version_code, r.Max_update_version_code, r.Min_update_version_code,
+		// 	r.Cpu_arch, r.Channel, r.ToUser.Download_url, r.ToUser.Md5, r.ToUser.Title, r.ToUser.Update_tips, r.Max_os_api, r.Min_os_api)
+		_, err = tx.Exec(sentence, r.Aid, r.Platform, r.ToUser.Update_version_code, r.Max_update_version_code, r.Min_update_version_code,
 			r.Cpu_arch, r.Channel, r.ToUser.Download_url, r.ToUser.Md5, r.ToUser.Title, r.ToUser.Update_tips, r.Max_os_api, r.Min_os_api)
+
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
-	// 还原版本编码
-	r.Max_update_version_code = DecodeVersion(r.Max_update_version_code)
-	r.Min_update_version_code = DecodeVersion(r.Min_update_version_code)
-	r.ToUser.Update_version_code = DecodeVersion(r.ToUser.Update_version_code)
+	_, err = tx.Exec("INSERT INTO downloadcount(aid, platform, update_version_code, count) VALUES (?, ?, ?, ?)", r.Aid, r.Platform, r.ToUser.Update_version_code, 0)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
 
-	return err
+	tx.Commit()
+	return nil
 }
 
 func ConnectDatabase() (*sql.DB, error) {
