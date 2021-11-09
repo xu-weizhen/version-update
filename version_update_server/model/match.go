@@ -80,6 +80,9 @@ func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 	// 	"这是一个新版本测试信息",
 	// }
 
+	// 改写版本编码
+	v.Update_version_code = EncodeVersion(v.Update_version_code)
+
 	if v.Device_platform == "iOS" {
 		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforios WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? order by update_version_code DESC limit 0,1"
 		err := db.QueryRow(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code).Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
@@ -96,6 +99,7 @@ func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 		}
 	}
 
+	v.Update_version_code = DecodeVersion(v.Update_version_code)
 	res.Download_url = "/download?aid=" + strconv.Itoa(v.Aid) + "&platform=" + v.Device_platform + "&update_version_code=" + res.Update_version_code + "&url=" + res.Download_url
 	return &res, nil
 }
