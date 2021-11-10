@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -83,22 +84,78 @@ func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 	v.Update_version_code = EncodeVersion(v.Update_version_code) // 改写版本编码
 
 	if v.Device_platform == "iOS" {
-		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforios WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? order by update_version_code DESC limit 0,1"
-		err := db.QueryRow(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code).Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
+		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforios WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? order by update_version_code DESC"
+		rows, err := db.Query(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code)
 		if err != nil {
 			fmt.Printf("scan failed, err:%v\n", err)
 			return nil, err
 		}
+		defer rows.Close()
+
+		for rows.Next() {
+			err := rows.Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
+			if err != nil {
+				fmt.Printf("failed2, err:%v\n", err)
+				return nil, err
+			}
+			if check_ID(v, &res, db) { //在白名单上
+				v.Update_version_code = DecodeVersion(v.Update_version_code)
+				res.Download_url = "/download?aid=" + strconv.Itoa(v.Aid) + "&platform=" + v.Device_platform + "&update_version_code=" + res.Update_version_code + "&url=" + res.Download_url
+				return &res, nil
+			}
+		}
+
 	} else {
-		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforandroid WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? AND max_os_api>=? AND min_os_api<=? order by update_version_code DESC limit 0,1"
-		err := db.QueryRow(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code, v.Os_api, v.Os_api).Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
+		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforandroid WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? AND max_os_api>=? AND min_os_api<=? order by update_version_code DESC"
+		rows, err := db.Query(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code, v.Os_api, v.Os_api)
 		if err != nil {
-			fmt.Printf("scan failed, err:%v\n", err)
+			fmt.Printf("failed1, err:%v\n", err)
 			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+
+			err := rows.Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
+			if err != nil {
+				fmt.Printf("failed2, err:%v\n", err)
+				return nil, err
+			}
+
+			if check_ID(v, &res, db) { //在白名单上
+				v.Update_version_code = DecodeVersion(v.Update_version_code)
+				res.Download_url = "/download?aid=" + strconv.Itoa(v.Aid) + "&platform=" + v.Device_platform + "&update_version_code=" + res.Update_version_code + "&url=" + res.Download_url
+				return &res, nil
+			}
 		}
 	}
 
 	v.Update_version_code = DecodeVersion(v.Update_version_code)
-	res.Download_url = "/download?aid=" + strconv.Itoa(v.Aid) + "&platform=" + v.Device_platform + "&update_version_code=" + res.Update_version_code + "&url=" + res.Download_url
-	return &res, nil
+	return nil, nil
+}
+
+func GetNewVersion(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "*") // 允许跨域
+
+	version, err := GetVersion(c) // 获取提交的版本信息
+
+	if err != nil { // 提交的版本信息有误
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "invalid parameter"})
+		return
+	}
+
+	db, err := ConnectDatabase()
+	if err != nil { // 数据库连接失败
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "database error"})
+		return
+	}
+	defer db.Close()
+
+	newVersion, err := MatchRule(version, db) // 获取可更新新版本
+	if err != nil {                           // 数据库查询失败
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, newVersion) // 将可更新新版本写入返回的消息
 }
