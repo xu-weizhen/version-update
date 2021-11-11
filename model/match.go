@@ -84,7 +84,7 @@ func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 	v.Update_version_code = EncodeVersion(v.Update_version_code) // 改写版本编码
 
 	if v.Device_platform == "iOS" {
-		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforios WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? order by update_version_code DESC"
+		queryStr := "SELECT id, update_version_code,download_url,md5,title,update_tips FROM rulesforios WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? order by update_version_code DESC"
 		rows, err := db.Query(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code)
 		if err != nil {
 			fmt.Printf("scan failed, err:%v\n", err)
@@ -106,7 +106,7 @@ func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 		}
 
 	} else {
-		queryStr := "SELECT update_version_code,download_url,md5,title,update_tips FROM rulesforandroid WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? AND max_os_api>=? AND min_os_api<=? order by update_version_code DESC"
+		queryStr := "SELECT id, update_version_code,download_url,md5,title,update_tips FROM rulesforandroid WHERE aid=? AND cpu_arch=? AND channel=? AND max_update_version_code>=? AND min_update_version_code<=? AND max_os_api>=? AND min_os_api<=? order by update_version_code DESC"
 		rows, err := db.Query(queryStr, v.Aid, v.Cpu_arch, v.Channel, v.Update_version_code, v.Update_version_code, v.Os_api, v.Os_api)
 		if err != nil {
 			fmt.Printf("failed1, err:%v\n", err)
@@ -114,17 +114,19 @@ func MatchRule(v *Version, db *sql.DB) (*NewVersion, error) {
 		}
 		defer rows.Close()
 
+		var id int
 		for rows.Next() {
-
-			err := rows.Scan(&res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
+			err := rows.Scan(&id, &res.Update_version_code, &res.Download_url, &res.Md5, &res.Title, &res.Update_tips)
 			if err != nil {
 				fmt.Printf("failed2, err:%v\n", err)
 				return nil, err
 			}
 
+			id += 123 // 加密 id
+
 			if check_ID(v, &res, db) { //在白名单上
 				v.Update_version_code = DecodeVersion(v.Update_version_code)
-				res.Download_url = "/download?aid=" + strconv.Itoa(v.Aid) + "&platform=" + v.Device_platform + "&update_version_code=" + res.Update_version_code + "&url=" + res.Download_url
+				res.Download_url = "/download?id=" + strconv.Itoa(id) + "&platform=" + v.Device_platform + "&url=" + res.Download_url
 				return &res, nil
 			}
 		}

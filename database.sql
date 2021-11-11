@@ -10,6 +10,7 @@ use update_version;
 
 -- 创建安卓的版本规则包
 CREATE TABLE rulesForAndroid(
+	`id` INT primary key auto_increment, 
 	`aid` INT,
 	`platform` VARCHAR(20),
 	`update_version_code` varchar(40),
@@ -23,11 +24,15 @@ CREATE TABLE rulesForAndroid(
 	`md5` varchar(255) not null,
 	`title` varchar(127) not null,
 	`update_tips` varchar(255) not null,
-	PRIMARY KEY(`aid`,`platform`,`update_version_code` )
+	`download_count` BIGINT not null default 0,
+	`status` int not null default 0,
+	-- PRIMARY KEY(`aid`,`platform`,`update_version_code`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+create index rulesForAndroid_index on rulesForAndroid(`aid`,`platform`,`update_version_code`)
 
 -- 创建iOS的版本规则包
 CREATE TABLE rulesForiOS(
+	`id` INT primary key auto_increment, 
 	`aid` INT,
 	`platform` VARCHAR(20),
 	`update_version_code` varchar(40),
@@ -39,19 +44,9 @@ CREATE TABLE rulesForiOS(
 	`md5` varchar(255) not null,
 	`title` varchar(127) not null,
 	`update_tips` varchar(255) not null,
-	PRIMARY KEY(`aid`,`platform`,`update_version_code` )
+	`download_count` BIGINT not null default 0,
+	`status` int not null default 0,
+	-- PRIMARY KEY(`aid`,`platform`,`update_version_code` )
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 统计下载次数
-CREATE TABLE downloadCount(
-	`aid` INT,
-	`platform` VARCHAR(20),
-	`update_version_code` varchar(40),
-	`count` BIGINT,
-	PRIMARY KEY(`aid`,`platform`,`update_version_code` )
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
-
-
+create index rulesForiOS_index on rulesForiOS(`aid`,`platform`,`update_version_code`)
 

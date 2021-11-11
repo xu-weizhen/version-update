@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+
 	"team10.com/version-update/model"
 
 	"github.com/gin-gonic/gin"
@@ -26,22 +27,7 @@ func main() {
 	r.POST("/config", model.GetAllRule)
 
 	r.GET("/newversion", model.GetNewVersion)
-
-	r.GET("/download", func(c *gin.Context) {
-		db, err := model.ConnectDatabase()
-		if err != nil { // 数据库连接失败
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": "database error"})
-			return
-		}
-		defer db.Close()
-
-		err = model.DownloadCount(c, db)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"msg": "invalid parameter"})
-		} else {
-			c.Redirect(http.StatusMovedPermanently, c.Query("url"))
-		}
-	})
+	r.GET("/download", model.DownloadCount)
 
 	r.Run()
 }
