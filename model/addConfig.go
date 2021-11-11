@@ -79,7 +79,7 @@ func GetAllRule(c *gin.Context) {
 		-1, // aid
 		c.PostForm("platform"),
 		c.PostForm("max_update_version_code"),
-		c.PostForm("max_update_version_code"),
+		c.PostForm("min_update_version_code"),
 		-1, // max os api
 		-1, // min os api
 		c.PostForm("cpu_arch"),
@@ -89,25 +89,25 @@ func GetAllRule(c *gin.Context) {
 	}
 
 	// aid 字段由 string 类型转为 int 类型
-	aid, err := strconv.Atoi(c.Query("aid"))
+	aid, err := strconv.Atoi(c.PostForm("aid"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mgs": err})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 		return
 	}
 	rule.Aid = aid
 
 	// max_os_api 字段由 string 类型转为 int 类型
-	max_os_api, err := strconv.Atoi(c.Query("max_os_api"))
+	max_os_api, err := strconv.Atoi(c.PostForm("max_os_api"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mgs": err})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 		return
 	}
 	rule.Max_os_api = max_os_api
 
 	// min_os_api 字段由 string 类型转为 int 类型
-	min_os_api, err := strconv.Atoi(c.Query("min_os_api"))
+	min_os_api, err := strconv.Atoi(c.PostForm("min_os_api"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"mgs": err})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 		return
 	}
 	rule.Min_os_api = min_os_api
@@ -128,12 +128,12 @@ func GetAllRule(c *gin.Context) {
 	// 读取白名单
 	f, _, err := c.Request.FormFile("device_id_list")
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 		return
-		c.JSON(http.StatusBadRequest, gin.H{"mgs": err})
 	} else {
 		rule.Device_id_list, err = ioutil.ReadAll(f)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"err": err})
+			c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 			return
 		}
 		//fmt.Println(string(rule.device_id_list))
@@ -143,18 +143,18 @@ func GetAllRule(c *gin.Context) {
 
 	db, err := ConnectDatabase()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": "Database error"})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Database error"})
 		return
 	}
 	defer db.Close()
 
 	err = AddRuleToDatabase(db, &rule)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": "Database error"})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Database error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, "OK!")
+	c.JSON(http.StatusOK, gin.H{"msg": "OK!"})
 
 	// err = writeDatabase(&rule, &user)
 	// if err != nil {
