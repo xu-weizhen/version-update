@@ -97,7 +97,7 @@ func deviceIDFuncCreate() func() string {
 	var selectSlices []string
 	deviceIDFilePaths := make([]string, 0, 16)
 	for i := 0; i < 16; i++ {
-		deviceIDFilePaths = append(deviceIDFilePaths, fmt.Sprintf("../../createWhiteList/whiteList%d.txt", i))
+		deviceIDFilePaths = append(deviceIDFilePaths, fmt.Sprintf("../createWhiteList/whiteList%d.txt", i))
 	}
 
 	for _, filePath := range deviceIDFilePaths {
@@ -124,7 +124,7 @@ func deviceIDFuncCreate() func() string {
 
 // versionCodeFuncCreate 从 configModels 下versionFile.txt选取一个版本
 func versionCodeFuncCreate() func() string {
-	filePath := "../../configModels/versionFile.txt"
+	filePath := "../configModels/versionFile.txt"
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal(err)
