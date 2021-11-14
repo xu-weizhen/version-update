@@ -50,3 +50,11 @@ CREATE TABLE rulesForiOS(
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 create index rulesForiOS_index on rulesForiOS(`aid`,`platform`,`update_version_code`)
 
+-- 创建设备白名单列表
+CREATE TABLE device_id(
+	`aid` INT,
+	`platform` VARCHAR(20),
+	`update_version_code` varchar(40),
+	`device_id_list` MEDIUMTEXT NOT NULL,
+	PRIMARY KEY(`aid`,`platform`,`update_version_code` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
